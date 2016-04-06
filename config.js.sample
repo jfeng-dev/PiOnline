@@ -1,0 +1,6 @@
+var config = {};
+
+config.apiKey = "";
+config.email = "";
+
+module.exports = config;
