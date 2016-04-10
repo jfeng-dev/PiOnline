@@ -1,6 +1,9 @@
-var config = {};
-
-config.apiKey = "";
-config.email = "";
+var config = {
+	apiKey : "",
+	email : "",
+	getIP : "http://icanhazip.com/",
+	baseUrl : "https://api.cloudflare.com/client/v4/",
+	cacheFile : './cache.json'
+};
 
 module.exports = config;
