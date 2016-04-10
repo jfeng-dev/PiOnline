@@ -1,9 +1,10 @@
 "use strict";
 var request = require("request");
 var config = require("./config.js");
-// var cache = require("./cache.js");
+var cache = require("./cache.js");
 let dnsZones = [];
 let hostIP = '';
+let Cache = new cache(config.cacheFile);
 
 function makeRequest(url,  method) {
 	let options = {
@@ -15,7 +16,7 @@ function makeRequest(url,  method) {
 		url : config.baseUrl + url,
 		method : method,
 	};
-
+	console.log(options.url);
 	return new Promise( (resolve, reject) => {
 		request(options, (err, res, body) => {
 			let response = JSON.parse(body);
@@ -28,19 +29,29 @@ function makeRequest(url,  method) {
 }
 
 function getZones() {
+	console.log('Getting your dns zones.');
+	if (dnsZones) {
+		return dnsZones;
+	}
+
 	return makeRequest('zones',  'GET')
 	.then((result) => {
 		result.forEach( (val) => {
 			dnsZones.push({id : val.id});
 		});
 		return dnsZones;
-	})
-	.catch( (err) => {
-		console.log(err);
 	});
 }
 
-function getHostIP() {
+function getHostIP(ip) {
+	console.log('Getting your ip address.');
+	if (hostIP == ip) {
+		throw {
+			success: true,
+			message : "Your IP address hasn't changed. Nothing to do here."
+		};
+	}
+
 	return new Promise( (resolve, reject)  => {
 		request(config.getIP, (err, res, body) => {
 			if (!err) {
@@ -53,13 +64,15 @@ function getHostIP() {
 	.then( (ip) => {
 		hostIP = ip;
 		return ip;
-	})
-	.catch( (err) => {
-		console.log(err);
 	});
 }
 
 function getZoneRecords(zones) {
+	console.log('Getting A records of your dns zones.');
+	if (zones[0].recordId) {
+		return zones;
+	}
+
 	let recordRequests = zones.map( (zone, idx, array) => {
 		let url = 'zones/' + zone.id + '/dns_records';
 		return makeRequest(url, 'GET')
@@ -80,6 +93,7 @@ function getZoneRecords(zones) {
 }
 
 function updateRecordValue(dnsRecords) {
+	console.log('Updating your A records with your new IP address');
 	let updateRequests = dnsRecords.map( (req) => {
 		let url = 'zones/' + req.zoneId + '/dns_records/' + req.recordId;
 		let data = {
@@ -90,10 +104,36 @@ function updateRecordValue(dnsRecords) {
 	return Promise.all(updateRequests);
 }
 
-getZones().then(getZoneRecords).then(updateRecordValue)
-.then( (updates) => {
-	console.log(updates);
-})
-.catch( (err)  =>{
-	console.log(err);
-})
+function loadCache() {
+	console.log('Loading IP and DNS zone cache.');
+	return Cache.load()
+	.then( (data) => {
+		dnsZones = data.dnsZones;
+		return data.hostIP;
+	});
+}
+
+function saveCache() {
+	console.log('Saving cache for next time');
+	return Cache.write({
+		hostIP : hostIP,
+		dnsZones : dnsZones
+	});
+}
+
+function run() {
+	console.log('Starting IP update.');
+	loadCache()
+	.then(getHostIP)
+	.then(getZones)
+	.then(getZoneRecords)
+	.then(updateRecordValue)
+	.then(saveCache)
+	.catch( (err) => {
+		console.log('Womp. There was an error updating your DNS records.');
+		console.log(err);
+	});
+	console.log('Finished.');
+}
+
+run()
