@@ -132,8 +132,10 @@ function run() {
 	.catch( (err) => {
 		console.log('Womp. There was an error updating your DNS records.');
 		console.log(err);
+		process.exit(1);
 	});
 	console.log('Finished.');
+	process.exit();
 }
 
-run()
+run();
