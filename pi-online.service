@@ -1,0 +1,14 @@
+[Unit]
+Description=Node.js script to update domain IP address
+
+[Service]
+ExecStart=/usr/local/bin/pi-online
+Restart=always
+RestartSec=600
+StandardOutput=syslog               # Output to syslog
+StandardError=syslog                # Output to syslog
+SyslogIdentifier=pi-online
+
+
+[Install]
+WantedBy=multi-user.target
