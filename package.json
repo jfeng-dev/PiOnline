@@ -2,11 +2,8 @@
   "name": "pi-online",
   "version": "0.0.1",
   "description": "Keeps your Pi accessible to the outside by setting Cloudflare's DNS servers to your home IP",
-  "main": "index.js",
-  "scripts": {
-
-  },
-  "bin" : "./index.js",
+  "main": "pi-online.js",
+  "bin" : "./pi-online.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/j-feng13/PiOnline.git"
@@ -16,6 +13,9 @@
     "pi",
     "cloudflare"
   ],
+  "scripts" : {
+    "install" : "./install.sh"
+    },
   "author": "Jonathan Feng",
   "email" : "me@jfeng.io",
   "license": "SEE LICENSE IN LICENSE",
