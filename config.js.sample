@@ -3,7 +3,8 @@ var config = {
 	email : "",
 	getIP : "http://icanhazip.com/",
 	baseUrl : "https://api.cloudflare.com/client/v4/",
-	cacheFile : './cache.json'
+	cacheFile : './cache.json',
+	'refreshTime' : 1800
 };
 
 module.exports = config;

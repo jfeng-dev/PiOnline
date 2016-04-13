@@ -138,4 +138,11 @@ function run() {
 	process.exit();
 }
 
-setTimeout(run, 1800);
+setTimeout(run, config.refreshTime);
+
+process.on('SIGTERM', function() {
+	saveCache().then( _ => {
+		console.log('Shutting down.');
+		process.exit();
+	});
+});
