@@ -1,7 +1,7 @@
 "use strict";
 var request = require("request");
 var config = require("./config.js");
-var cache = require("./cache.js");
+var cache = require("./lib/cache.js");
 let dnsZones = [];
 let hostIP = '';
 let Cache = new cache(config.cacheFile);
