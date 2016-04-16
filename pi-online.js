@@ -1,12 +1,12 @@
 "use strict";
 var request = require("request");
 var config = require("./config.js");
-var cache = require("./lib/cache.js");
+var cache = require("./lib/cache/cache.js");
 let dnsZones = [];
 let hostIP = '';
 let Cache = new cache(config.cacheFile);
 
-function makeRequest(url,  method) {
+function makeRequest(url,  method, data) {
 	let options = {
 		headers : {
 			"Content-Type" : "application/json",
@@ -15,11 +15,15 @@ function makeRequest(url,  method) {
 		},
 		url : config.baseUrl + url,
 		method : method,
+		json: true,
 	};
-	console.log(options.url);
+
+	if (data) {
+		options.body = data;
+	}
 	return new Promise( (resolve, reject) => {
 		request(options, (err, res, body) => {
-			let response = JSON.parse(body);
+			let response = body;
 			if (!response.success) {
 				reject(response.errors);
 			} else {
@@ -30,14 +34,17 @@ function makeRequest(url,  method) {
 
 function getZones() {
 	console.log('Getting your dns zones.');
-	if (dnsZones) {
+	if (dnsZones != null && dnsZones.length > 0) {
 		return dnsZones;
 	}
 
 	return makeRequest('zones',  'GET')
 	.then((result) => {
 		result.forEach( (val) => {
-			dnsZones.push({id : val.id});
+			dnsZones.push({
+				id : val.id,
+				fqdn: val.name,
+			});
 		});
 		return dnsZones;
 	});
@@ -62,7 +69,7 @@ function getHostIP(ip) {
 		});
 	})
 	.then( (ip) => {
-		hostIP = ip;
+		hostIP = ip.trim();
 		return ip;
 	});
 }
@@ -84,8 +91,9 @@ function getZoneRecords(zones) {
 			});
 			array[idx].recordId = aRecord.id;
 			return {
-				zoneId : aRecord.zone_id,
-				recordId : aRecord.id
+				id : aRecord.zone_id,
+				recordId : aRecord.id,
+				fqdn : aRecord.name,
 			};
 		});
 	});
@@ -95,13 +103,19 @@ function getZoneRecords(zones) {
 function updateRecordValue(dnsRecords) {
 	console.log('Updating your A records with your new IP address');
 	let updateRequests = dnsRecords.map( (req) => {
-		let url = 'zones/' + req.zoneId + '/dns_records/' + req.recordId;
+		let url = 'zones/' + req.id + '/dns_records/' + req.recordId;
 		let data = {
-			'content' : hostIP
+			'content' : hostIP,
+			'type' : 'A',
+			'name' : req.fqdn,
 		};
 		return makeRequest(url, 'PUT', data);
 	});
-	return Promise.all(updateRequests);
+	return Promise.all(updateRequests)
+		.catch( (err) => {
+			console.trace(err);
+			throw err;
+		});
 }
 
 function loadCache() {
@@ -129,13 +143,15 @@ function run() {
 	.then(getZoneRecords)
 	.then(updateRecordValue)
 	.then(saveCache)
+	.then( _ => {
+		console.log('Finished.');
+	})
 	.catch( (err) => {
 		console.log('Womp. There was an error updating your DNS records.');
-		console.log(err);
-		process.exit(1);
+		err.forEach( (error) => {
+			console.log(error);
+		})
 	});
-	console.log('Finished.');
-	process.exit();
 }
 
 setTimeout(run, config.refreshTime);
