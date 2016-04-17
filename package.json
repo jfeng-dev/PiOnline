@@ -14,7 +14,7 @@
     "cloudflare"
   ],
   "scripts" : {
-    "install" : "./install.sh"
+    "install" : "./lib/install/install.sh"
     },
   "author": "Jonathan Feng",
   "email" : "me@jfeng.io",

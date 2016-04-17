@@ -2,7 +2,7 @@
 Description=Node.js script to update domain IP address
 
 [Service]
-ExecStart=/usr/bin/node /usr/local/bin/pi-online &
+ExecStart=/usr/bin/nodejs /usr/local/lib/pi-online &
 Restart=always
 RestartSec=600
 StandardOutput=syslog               # Output to syslog
