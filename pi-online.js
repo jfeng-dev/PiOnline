@@ -4,7 +4,7 @@ var config = require("./config/config.js");
 var cache = require("./lib/cache/cache.js");
 let dnsZones = [];
 let hostIP = '';
-let Cache = new cache(config.cacheFile);
+let Cache = new cache(__dirname + config.cacheFile);
 
 function makeRequest(url,  method, data) {
 	let options = {
@@ -52,7 +52,7 @@ function getZones() {
 
 function getHostIP(ip) {
 	console.log('Getting your ip address.');
-	if (hostIP == ip) {
+	if (hostIP && hostIP == ip) {
 		throw {
 			success: true,
 			message : "Your IP address hasn't changed. Nothing to do here."
@@ -122,8 +122,11 @@ function loadCache() {
 	console.log('Loading IP and DNS zone cache.');
 	return Cache.load()
 	.then( (data) => {
-		dnsZones = data.dnsZones;
-		return data.hostIP;
+		if (data && data.dnsZones && data.hostIP) {
+			dnsZones = data.dnsZones;
+			return data.hostIP;
+		}
+		return '';
 	});
 }
 
