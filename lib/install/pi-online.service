@@ -2,11 +2,10 @@
 Description=Node.js script to update domain IP address
 
 [Service]
-ExecStart=/usr/bin/nodejs /usr/local/lib/pi-online &
+ExecStartPre=/usr/bin/bash -c "/usr/bin/systemctl set-environment NPMGLOBALPATH=$(npm config get prefix)"
+ExecStart=/usr/bin/nodejs  $(NPMGLOBALPATH)/pi-online
 Restart=always
 RestartSec=600
-StandardOutput=syslog               # Output to syslog
-StandardError=syslog                # Output to syslog
 SyslogIdentifier=pionline
 
 
